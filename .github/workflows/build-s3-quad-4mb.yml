@@ -1,0 +1,47 @@
+
+name: Build AWTRIX NG S3 Quad 4MB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build S3 Quad 4MB USB firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install build tools
+        run: pip install -U platformio esptool
+
+      - name: Build firmware
+        run: pio run -e awtrix_s3_quad
+
+      - name: Build 4MB USB image
+        run: |
+          python scripts/factory_image.py \
+            --env awtrix_s3_quad \
+            --flash-size 4MB \
+            -o dist
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: awtrix-ng-s3-quad-4mb
+          path: dist/usb-awtrix-ng-s3-quad-4mb.bin
+          if-no-files-found: error
