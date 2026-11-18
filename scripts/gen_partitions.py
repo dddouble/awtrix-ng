@@ -36,11 +36,13 @@ import sys
 APP_SLOT = {
     "esp32": 0x1B0000,
     "esp32s3": 0x1B0000,
+    "esp32c3": 0x1B0000,
 }
 
 FACTORY_FLASH_SIZES = {
     "esp32": ["4MB", "8MB", "16MB"],
     "esp32s3": ["8MB", "16MB"],
+    "esp32c3": ["4MB"],
 }
 
 ALIGN = 0x10000
