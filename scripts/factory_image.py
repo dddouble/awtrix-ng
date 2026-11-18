@@ -29,7 +29,11 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 import gen_partitions as gp  # noqa: E402
 
-BOOTLOADER_OFFSET = {"esp32": 0x1000, "esp32s3": 0x0000}
+BOOTLOADER_OFFSET = {
+    "esp32": 0x1000,
+    "esp32s3": 0x0000,
+    "esp32c3": 0x0000,
+}
 
 PARTITION_TABLE_OFFSET = 0x8000
 BOOT_APP0_OFFSET = 0xE000
@@ -114,7 +118,10 @@ def build_one(env, soc, flash_size, output):
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--env", required=True, help="PlatformIO env, e.g. awtrix_s3_octal")
-    ap.add_argument("--soc", help="defaults to esp32s3 for envs carrying _s3, else esp32")
+    ap.add_argument(
+        "--soc",
+        help="defaults to esp32s3 for envs carrying _s3, esp32c3 for _c3, else esp32",
+    )
     ap.add_argument("--flash-size", help="e.g. 4MB, 8MB, 16MB")
     ap.add_argument("--all", action="store_true",
                     help="build every flash variant this SoC ships in")
@@ -124,7 +131,16 @@ def main(argv):
     # Matched anywhere in the name, not at the end: the S3 has variant envs
     # behind it (awtrix_s3_quad, awtrix_s3_octal_probe), and a suffix test would call
     # every one of them an esp32 and merge an image no S3 can boot.
-    soc = args.soc or ("esp32s3" if "_s3" in args.env else "esp32")
+    
+    if args.soc:
+        soc = args.soc
+    elif "_s3" in args.env:
+        soc = "esp32s3"
+    elif "_c3" in args.env:
+        soc = "esp32c3"
+    else:
+        soc = "esp32"    
+    
     if soc not in BOOTLOADER_OFFSET:
         raise SystemExit("factory_image: unknown SoC %r" % soc)
 
