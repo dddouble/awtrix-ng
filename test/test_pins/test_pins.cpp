@@ -10,6 +10,7 @@ namespace {
 
 const pins::SocProfile& esp32() { return pins::esp32Profile(); }
 const pins::SocProfile& s3() { return pins::esp32s3Profile(); }
+const pins::SocProfile& c3() { return pins::esp32c3Profile(); }
 
 pins::PinSet ulanzi() { return esp32().defaults; }
 
@@ -28,6 +29,54 @@ pins::PinSet awtrix2() {
   p.dfTx = 18;
   p.dfplayerEnabled = true;
   return p;
+}
+
+
+void test_c3_profile_defaults_and_matrix_pin() {
+  std::string err;
+  TEST_ASSERT_EQUAL_STRING("esp32c3", c3().id);
+  TEST_ASSERT_EQUAL_INT(21, c3().gpioMax);
+  TEST_ASSERT_EQUAL_INT(20, c3().defaults.matrix);
+  TEST_ASSERT_EQUAL_INT(1, c3().matrix.count);
+  TEST_ASSERT_EQUAL_INT(20, c3().matrix.items[0]);
+  TEST_ASSERT_TRUE_MESSAGE(pins::validate(c3().defaults, c3(), err), err.c_str());
+  TEST_ASSERT_TRUE(pins::isMatrixPin(20, c3()));
+  TEST_ASSERT_FALSE(pins::isMatrixPin(21, c3()));
+}
+
+void test_c3_flash_and_usb_pins_are_reserved() {
+  const int reservedPins[] = {11, 12, 13, 14, 15, 16, 17, 18, 19};
+  for (int pin : reservedPins) {
+    pins::PinSet p = c3().defaults;
+    p.buzzer = pin;
+    std::string err;
+    TEST_ASSERT_FALSE_MESSAGE(pins::validate(p, c3(), err), std::to_string(pin).c_str());
+  }
+}
+
+void test_c3_gpio_range_and_adc1_are_profile_specific() {
+  std::string err;
+  pins::PinSet p = c3().defaults;
+  p.buzzer = 21;
+  TEST_ASSERT_TRUE_MESSAGE(pins::validate(p, c3(), err), err.c_str());
+
+  p.buzzer = 22;
+  TEST_ASSERT_FALSE(pins::validate(p, c3(), err));
+
+  p = c3().defaults;
+  p.battery = 4;
+  TEST_ASSERT_TRUE_MESSAGE(pins::validate(p, c3(), err), err.c_str());
+
+  p.battery = 5;
+  TEST_ASSERT_FALSE(pins::validate(p, c3(), err));
+  TEST_ASSERT_TRUE(err.find("ADC1") != std::string::npos);
+}
+
+void test_c3_rtc_wake_pins_follow_the_profile() {
+  for (int pin = 0; pin <= 5; ++pin)
+    TEST_ASSERT_TRUE(pins::isRtcWakePin(pin, c3()));
+  for (int pin = 6; pin <= 21; ++pin)
+    TEST_ASSERT_FALSE(pins::isRtcWakePin(pin, c3()));
 }
 
 void test_i2s_is_offered_on_the_s3_only() {
@@ -342,6 +391,10 @@ void tearDown() {}
 int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_profile_defaults_are_valid);
+  RUN_TEST(test_c3_profile_defaults_and_matrix_pin);
+  RUN_TEST(test_c3_flash_and_usb_pins_are_reserved);
+  RUN_TEST(test_c3_gpio_range_and_adc1_are_profile_specific);
+  RUN_TEST(test_c3_rtc_wake_pins_follow_the_profile);
   RUN_TEST(test_every_matrix_pin_is_accepted_by_its_own_profile);
   RUN_TEST(test_fallback_pin_is_a_member_of_the_active_list);
   RUN_TEST(test_default_pin_set_is_inert);
