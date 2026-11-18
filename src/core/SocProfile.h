@@ -10,7 +10,13 @@
 #define AWTRIX_MATRIX_PINS_ESP32S3(X) \
   X(13) X(14) X(15) X(16) X(17) X(18) X(21) X(38) X(39) X(40) X(41) X(42) X(47)
 
-#if defined(AWTRIX_SOC_ESP32S3)
+#define AWTRIX_MATRIX_PINS_ESP32C3(X) \
+  X(20)
+
+#if defined(AWTRIX_SOC_ESP32C3)
+#define AWTRIX_MATRIX_PIN_LIST(X) AWTRIX_MATRIX_PINS_ESP32C3(X)
+#define AWTRIX_MATRIX_FALLBACK_PIN 20
+#elif defined(AWTRIX_SOC_ESP32S3)
 #define AWTRIX_MATRIX_PIN_LIST(X) AWTRIX_MATRIX_PINS_ESP32S3(X)
 #define AWTRIX_MATRIX_FALLBACK_PIN 21
 #else
@@ -129,6 +135,20 @@ constexpr int kEsp32s3Matrix[] = {
 #undef X
 };
 
+constexpr ReservedRange kEsp32c3Reserved[] = {
+    {11, 11, "the SPI flash supply (VDD_SPI)"},
+    {12, 17, "the SPI flash"},
+    {18, 19, "the USB Serial/JTAG interface"},
+};
+constexpr PinRange kEsp32c3Adc1[] = {{0, 4}};
+constexpr PinRange kEsp32c3Strapping[] = {{2, 2}, {8, 9}};
+constexpr PinRange kEsp32c3Rtc[] = {{0, 5}};
+constexpr int kEsp32c3Matrix[] = {
+#define X(p) p,
+    AWTRIX_MATRIX_PINS_ESP32C3(X)
+#undef X
+};
+
 template <typename T, std::size_t N>
 constexpr std::size_t countOf(const T (&)[N]) {
   return N;
@@ -173,8 +193,27 @@ inline const SocProfile& esp32s3Profile() {
   return p;
 }
 
+inline const SocProfile& esp32c3Profile() {
+  static const SocProfile p = {
+      "esp32c3",
+      "ESP32-C3",
+      21,
+      {nullptr, 0},
+      {nullptr, 0},
+      {detail::kEsp32c3Reserved, detail::countOf(detail::kEsp32c3Reserved)},
+      {detail::kEsp32c3Adc1, detail::countOf(detail::kEsp32c3Adc1)},
+      {detail::kEsp32c3Strapping, detail::countOf(detail::kEsp32c3Strapping)},
+      {detail::kEsp32c3Rtc, detail::countOf(detail::kEsp32c3Rtc)},
+      {detail::kEsp32c3Matrix, detail::countOf(detail::kEsp32c3Matrix)},
+      PinSet{20, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, -1, -1, -1, -1, -1},
+  };
+  return p;
+}
+
 inline const SocProfile& activeProfile() {
-#if defined(AWTRIX_SOC_ESP32S3)
+#if defined(AWTRIX_SOC_ESP32C3)
+  return esp32c3Profile();
+#elif defined(AWTRIX_SOC_ESP32S3)
   return esp32s3Profile();
 #else
   return esp32Profile();
