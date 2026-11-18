@@ -30,9 +30,10 @@ SUPPORTED = [
     ("esp32s3", "4MB"),
     ("esp32s3", "8MB"),
     ("esp32s3", "16MB"),
+    ("esp32c3", "4MB"),
 ]
 
-REJECTED = [("esp32", "2MB")]
+REJECTED = [("esp32", "2MB"), ("esp32c3", "2MB")]
 
 failures = []
 
