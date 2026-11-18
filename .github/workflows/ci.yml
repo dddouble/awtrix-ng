@@ -143,6 +143,8 @@ jobs:
             ota: firmware-awtrix-ng-s3-octal.bin
           - env: awtrix_s3_quad
             ota: firmware-awtrix-ng-s3-quad.bin
+          - env: awtrix_c3
+            ota: firmware-awtrix-ng-c3.bin
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
